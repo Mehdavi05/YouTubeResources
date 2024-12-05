@@ -40,16 +40,19 @@ class ViewController: UIViewController {
         return stackVw
     }()
     
-    private let imgLink = "https://blueprint-api-production.s3.amazonaws.com/uploads/story/thumbnail/121489/11a49146-03e6-4f02-8c30-ac3454a1b54b.png"
+    private let imgLink = "https://media.wired.com/photos/5f2d7c2191d87e6680b80936/16:9/w_2400,h_1350,c_limit/Science_climatedesk_453801484.jpg"
+    private let imgDownloadViewModel = ImageDownloadViewModel()
+    private var subscriptions: Set<AnyCancellable> = []
     
     override func loadView() {
         super.loadView()
         setup()
+        setUpImageSubscription()
     }
     
     @objc
     func downloadDidTouch() {
-
+        imgDownloadViewModel.download(url: imgLink)
     }
 }
 
@@ -63,7 +66,6 @@ private extension ViewController {
         view.addSubview(contentContainerStackVw)
         
         NSLayoutConstraint.activate([
-            
             downloadBtn.heightAnchor.constraint(equalToConstant: 44),
             contentImgVw.heightAnchor.constraint(equalToConstant: 150),
             
@@ -73,7 +75,15 @@ private extension ViewController {
                                                              constant: 16),
             contentContainerStackVw.trailingAnchor.constraint(equalTo: view.trailingAnchor,
                                                               constant: -16)
-
         ])
+    }
+    
+    func setUpImageSubscription() {
+        imgDownloadViewModel
+            .image
+            .sink { [weak self] newImage in
+                self?.contentImgVw.image = newImage
+            }
+            .store(in: &subscriptions)
     }
 }

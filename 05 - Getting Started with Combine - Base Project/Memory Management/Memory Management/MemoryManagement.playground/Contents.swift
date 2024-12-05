@@ -28,7 +28,9 @@ class AccountViewModel {
         
         user
          .map(\.status)
-         .assign(to: \.accountState, on: self)
+         .sink{[weak self] val in
+             self?.accountState = val
+         }
          .store(in: &subscriptions)
     }
     
@@ -36,3 +38,10 @@ class AccountViewModel {
         print("deinit released AccountViewModel")
     }
 }
+
+var viewModel: AccountViewModel? = AccountViewModel()
+viewModel?.user.value.status = .inactive
+
+viewModel = nil
+
+

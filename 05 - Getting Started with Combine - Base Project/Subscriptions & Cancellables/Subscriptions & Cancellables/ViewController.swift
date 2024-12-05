@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Combine
 
 class ViewController: UIViewController {
 
@@ -20,7 +21,6 @@ class ViewController: UIViewController {
     
     private let startBtn: UIButton = {
         let btn = UIButton()
-        btn.addTarget(self, action: #selector(startTimer), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.layer.cornerRadius = 8
         btn.setTitle("Start", for: .normal)
@@ -32,7 +32,6 @@ class ViewController: UIViewController {
     
     private let stopBtn: UIButton = {
         let btn = UIButton()
-        btn.addTarget(self, action: #selector(stopTimer), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.layer.cornerRadius = 8
         btn.setTitle("Stop", for: .normal)
@@ -55,15 +54,34 @@ class ViewController: UIViewController {
         setup()
     }
     
+    private var subscription: AnyCancellable?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        startBtn.addTarget(self, action: #selector(startTimer), for: .touchUpInside)
+        stopBtn.addTarget(self, action: #selector(stopTimer), for: .touchUpInside)
+    }
+    
     @objc
     func startTimer() {
         print("Start")
-        
+        subscription = Timer
+            .publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .scan(0, { (count, _) in
+                return count + 1
+            })
+            .sink(receiveCompletion: { _ in
+                print("Finished")
+            }, receiveValue: { [weak self] count in
+                print("Updating the label to the current value: \(count.format)")
+                self?.countLbl.text = count.format
+            })
     }
     
     @objc
     func stopTimer() {
-        print("Stop")
+        subscription?.cancel()
     }
 }
 

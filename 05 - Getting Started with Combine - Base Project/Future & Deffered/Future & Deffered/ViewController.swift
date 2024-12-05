@@ -39,6 +39,9 @@ class ViewController: UIViewController {
         return stackVw
     }()
     
+    private let notificationViewModel = NotificationViewModel()
+    private var subscriptions = Set<AnyCancellable>()
+    
     override func loadView() {
         super.loadView()
         setup()
@@ -46,7 +49,14 @@ class ViewController: UIViewController {
 
     @objc
     func permissionBtnDidTouch() {
-
+        notificationViewModel
+            .authorize()
+            .replaceError(with: false)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] val in
+                self?.permissionLbl.text = "Status: \(val ? "Granted" : "Denied")"
+            }
+            .store(in: &subscriptions)
     }
 }
 

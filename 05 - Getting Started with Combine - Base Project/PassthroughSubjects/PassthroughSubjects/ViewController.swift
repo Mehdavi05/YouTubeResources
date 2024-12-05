@@ -39,14 +39,19 @@ class ViewController: UIViewController {
         return stackVw
     }()
     
+    private var subscriptions = Set<AnyCancellable>()
+    private lazy var accountViewModel = AccountViewModel()
+    private lazy var commentsViewModel = CommentsViewModel(manager: accountViewModel)
+    
     override func loadView() {
         super.loadView()
         setup()
+        accountSubscription()
     }
     
     @objc
     func commentDidTouch() {
-        
+        commentsViewModel.send(comment: commentTxtVw.text)
     }
 }
 
@@ -56,19 +61,31 @@ private extension ViewController {
         
         formContainerStackVw.addArrangedSubview(commentTxtVw)
         formContainerStackVw.addArrangedSubview(commentBtn)
-
+        
         view.addSubview(formContainerStackVw)
         
         NSLayoutConstraint.activate([
-                        
+            
             commentBtn.heightAnchor.constraint(equalToConstant: 44),
             commentTxtVw.heightAnchor.constraint(equalToConstant: 150),
             formContainerStackVw.leadingAnchor.constraint(equalTo: view.leadingAnchor,
                                                           constant: 16),
             formContainerStackVw.trailingAnchor.constraint(equalTo: view.trailingAnchor,
-                                                          constant: -16),
+                                                           constant: -16),
             formContainerStackVw.bottomAnchor.constraint(equalTo: view.bottomAnchor,
                                                          constant: -44)
         ])
+    }
+    
+    func accountSubscription() {
+        accountViewModel
+            .userAccountStatus
+            .sink { [weak self] status in
+                guard let self else { return }
+                if status == .banned {
+                    self.showBlocked()
+                }
+            }
+            .store(in: &subscriptions)
     }
 }

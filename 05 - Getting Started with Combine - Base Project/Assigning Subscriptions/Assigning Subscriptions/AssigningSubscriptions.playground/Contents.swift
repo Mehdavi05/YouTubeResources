@@ -9,3 +9,9 @@ final class LevelsManager {
         }
     }
 }
+
+let lvlManager = LevelsManager()
+let lvlRange = (1...100)
+let cancelable = lvlRange
+    .publisher
+    .assign(to: \.level, on: lvlManager)
